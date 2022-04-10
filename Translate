@@ -1,0 +1,133 @@
+import json
+import requests
+
+from tkinter import Button,END,Label,Tk,Text
+result=""
+class trans_master(object):
+    def __init__(self):
+        pass
+    def collect(self,word):
+        path_ad='http://fanyi.youdao.com/translate?smartresult=dict&smartresult=rule'
+        #You need a link to use this post
+        file_format={'i': word,
+              'from': 'AUTO',
+              'to': 'AUTO',
+              'smartresult': 'dict',
+              'client': 'tsldeskweb',
+              'doctype': 'json',
+              'version': '2.1',
+              'keyfrom': 'tsl.web',
+              'action': 'FY_BY_REALTIME',
+              'typoResult': 'false'}
+        # Record the content that needs to be posted, in the form of a dictionary, in file_format.
+        text = requests.post(path_ad, file_format)
+        #post requires two parameters, one is the link just now, one is the file_format, the return is a Response object
+        answer=json.loads(text.text)
+        result = answer['translateResult'][0][0]['tgt']
+        return result
+
+
+
+class Application(object):
+    def __init__(self):
+        self.monitor = Tk()
+        self.tsl = trans_master()
+
+
+        self.monitor.title(u'マスター・トランスレーター')
+        # Set window size and position
+        self.monitor.geometry('510x570+500+300')
+        self.monitor.minsize(610,370)
+        self.monitor.maxsize(610,370)
+        self.work_space1 = Text(self.monitor, background='light steelblue')
+        self.work_space1.place(x = 10,y = 35,width = 285,height = 155)
+        self.work_space1.bind("<Key-Return>",self.sbmone)
+        # Translation result title
+        self.mask_name = Label(self.monitor, text=u'翻訳結果:')
+        self.mask_name.place(x=310, y=5)
+        self.mask_name1 = Label(self.monitor, text=u'入力:')
+        self.mask_name1.place(x=10, y=5)
+        #Create a button
+        #Add events to buttons
+        self.con_ico = Button(self.monitor,text=u'翻訳',command=self.sbmtwo)
+        self.con_ico.place(x=205,y=205,width=50,height=25)
+        self.con_ico2 = Button(self.monitor,text=u'一掃',command = self.clean)
+        self.con_ico2.place(x=310,y=205,width=50,height=25)
+
+        self.con_ico3 = Button(self.monitor, text=u'読み', command=self.sbmthree)
+        self.con_ico3.place(x=205, y=265, width=50, height=25)
+        self.con_ico4 = Button(self.monitor, text=u'保存', command=self.sbmlast)
+        self.con_ico4.place(x=310, y=265, width=50, height=25)
+
+        #translation results
+        self.work_space = Text(self.monitor,background = 'light steelblue')
+        self.work_space.place(x = 310,y = 35,width = 285,height = 155)
+        #回车翻译
+    def sbmone(self,event):
+        # Get the value entered by the user from the input box
+        content = self.work_space1.get(0.0,END).strip().replace("\n"," ")
+        # Send this value to the server for translation
+
+        # Global declaration of results for subsequent use in saving txt files
+        global result
+        result = self.tsl.collect(content)
+
+        # Display the results in the text box in the window
+        self.work_space.delete(0.0,END)
+        self.work_space.insert(END,result)
+
+        #print(content)
+
+    def sbmtwo(self):
+        # Get the value entered by the user from the input box
+        content = self.work_space1.get(0.0,END).strip().replace("\n"," ")
+        # Send this value to the server for translation
+        global result
+        result = self.tsl.collect(content)
+        # Display the results in the text box in the window
+
+        self.work_space.delete(0.0,END)
+        self.work_space.insert(END,result)
+        print(content)
+
+    def sbmthree(self):
+        # Get the value entered by the user from the input box
+
+        f2 = open("D:/abc.txt", encoding='utf-8')
+        lines = f2.readlines()
+        content=""
+        for line3 in lines:
+            content +=line3;
+        global result
+        result = self.tsl.collect(content)
+        # Display the results in the text box in the window
+
+        self.work_space.delete(0.0,END)
+        self.work_space.insert(END,result)
+        self.work_space1.delete(0.0, END)
+        self.work_space1.insert(END, content)
+        print(content)
+
+    def sbmlast(self):
+        # Get the value entered by the user from the input box
+        f = open("D:result.txt", "w", encoding ='utf-8')
+        global result
+        f.write(result)
+        f.close()
+        text="Save successfully."
+        self.work_space.delete(0.0, END)
+        self.work_space.insert(END, text)
+        self.work_space1.delete(0.0, END)
+        self.work_space1.insert(END, text)
+    #Clear the contents of the text field
+    def clean(self):
+        self.work_space1.delete(0.0,END)
+        self.work_space.delete(0.0,END)
+
+    def run(self):
+        self.monitor.mainloop()
+
+
+if __name__=="__main__":
+    app = Application()
+    app.run()
